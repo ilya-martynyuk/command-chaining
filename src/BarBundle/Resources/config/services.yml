@@ -1,0 +1,6 @@
+services:
+  bar.command.hi:
+    class: BarBundle\Command\BarHiCommand
+    arguments: ['@chain_command.service']
+    tags:
+      - { name: console.command }

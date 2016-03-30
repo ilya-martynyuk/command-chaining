@@ -1,0 +1,10 @@
+services:
+  chain_command.service:
+    class: ChainCommandBundle\Services\ChainCommandService
+    arguments: ['@logger']
+
+  kernel.listener.command_dispatch:
+    class: ChainCommandBundle\Listeners\PreExecuteCommandListener
+    arguments: ['@chain_command.service']
+    tags:
+      - { name: kernel.event_listener, event: console.command }
