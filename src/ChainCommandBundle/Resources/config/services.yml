@@ -3,8 +3,16 @@ services:
     class: ChainCommandBundle\Services\ChainCommandService
     arguments: ['@logger']
 
-  kernel.listener.command_dispatch:
+  chain_command.command_dispatch:
     class: ChainCommandBundle\Listeners\PreExecuteCommandListener
     arguments: ['@chain_command.service']
     tags:
       - { name: kernel.event_listener, event: console.command }
+
+  chain_command.command_terminate:
+    class: ChainCommandBundle\Listeners\TerminateCommandListener
+    arguments: ['@chain_command.service']
+    calls:
+      - [setContainer, ["@service_container"]]
+    tags:
+      - { name: kernel.event_listener, event: console.terminate }

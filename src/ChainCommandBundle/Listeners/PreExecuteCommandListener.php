@@ -35,17 +35,21 @@ class PreExecuteCommandListener
     /**
      * @param ConsoleCommandEvent $event
      */
-    public function onConsoleCommand(ConsoleCommandEvent $event) {
+    public function onConsoleCommand(ConsoleCommandEvent $event)
+    {
         $output = $event->getOutput();
         $command = $event->getCommand();
 
         $parentCommandName = $this
             ->chainCommandService
-            ->findParentCommand($command->getName())
-        ;
+            ->findParentCommand($command->getName());
+
+        $isLaunchedInternally = $this
+            ->chainCommandService
+            ->isLaunchedInternally($command->getName());
 
         // Seems this command is not a member of any chain. Allow executing it.
-        if (!$parentCommandName) {
+        if (!$parentCommandName || $isLaunchedInternally) {
             return;
         }
 

@@ -48,19 +48,13 @@ class ChainCommandBundleTest extends WebTestCase
         $loggerMock = $this
             ->getMockBuilder('Monolog\Logger')
             ->disableOriginalConstructor()
-            ->getMock()
-        ;
+            ->getMock();
+
+        $this->chainCommandService = new ChainCommandService($loggerMock);
 
         $this->client = self::createClient();
         $this->application = new Application($this->client->getKernel());
         $this->application->setAutoExit(false);
-
-
-        $this->chainCommandService = new ChainCommandService($loggerMock);
-
-        $this->consoleApplication = new Application();
-        $this->consoleApplication->add(new RootCommand());
-        $this->consoleApplication->add(new MemberCommand());
     }
 
     public function testDsw()
@@ -69,31 +63,5 @@ class ChainCommandBundleTest extends WebTestCase
 
         $output = $this
             ->runCommand($this->client, "command:root");
-
-        var_dump($output);
-
-//        $kernel = $this->container->get('kernel');
-//        $kernel->shutdown();
-//        $kernel->boot();
-//
-//        $app = new Application($kernel);
-//        $app->setAutoExit(false);
-//        $app->add(new RootCommand());
-//        $app->add(new MemberCommand());
-//
-//        $input = new ArrayInput([
-//            'command' => 'command:root'
-//        ]);
-//
-//        $app->doRun($input, new \Symfony\Component\Console\Output\ConsoleOutput());
-
-
-//        $this
-//            ->chainCommandService
-//            ->addChain('command:root', 'command:member')
-//        ;
-//
-//        $process = new Process('php bin/console ');
-//        $process->start();
     }
 }

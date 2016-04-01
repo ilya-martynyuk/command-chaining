@@ -22,13 +22,11 @@ class BarHiCommand extends ContainerAwareCommand
     {
         $this
             ->setName('bar:hi')
-            ->setDescription('This command is used for outputting "hi" message from "BarBundle"')
-        ;
+            ->setDescription('This command is used for outputting "hi" message from "BarBundle"');
 
         $this
             ->chainCommandService
-            ->addChain('foo:hello', $this->getName())
-        ;
+            ->addChain('foo:hello', 'bar:hi');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)

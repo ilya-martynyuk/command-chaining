@@ -29,8 +29,7 @@ class ChainCommandServiceTest extends \PHPUnit_Framework_TestCase
         $loggerMock = $this
             ->getMockBuilder('Monolog\Logger')
             ->disableOriginalConstructor()
-            ->getMock()
-        ;
+            ->getMock();
 
         $this->object = new ChainCommandService($loggerMock);
     }
@@ -43,24 +42,21 @@ class ChainCommandServiceTest extends \PHPUnit_Framework_TestCase
         // Attaching 'foo1' command to 'bar' command.
         $this
             ->object
-            ->addChain('bar', 'foo1')
-        ;
+            ->addChain('bar', 'foo1');
 
         // Attaching 'foo2' command to 'bar' command.
         $this
             ->object
             ->addChain('bar', 'foo2', [
                 '--option' => 'option'
-            ])
-        ;
+            ]);
 
         // Creating chain which is already exist (should be ignored).
         $this
             ->object
             ->addChain('bar', 'foo2', [
                 '--option' => 'option'
-            ])
-        ;
+            ]);
 
         // But this chain is not the same as described above.
         // This chain has different options and should not be ignored.
@@ -70,8 +66,7 @@ class ChainCommandServiceTest extends \PHPUnit_Framework_TestCase
             ->addChain('bar', 'foo2', [
                 '--option' => 'option',
                 '--option2' => 'option2'
-            ])
-        ;
+            ]);
 
         // Receiving all attached to 'bar' commands.
         $chainedCommands = $this
@@ -103,8 +98,7 @@ class ChainCommandServiceTest extends \PHPUnit_Framework_TestCase
         // Trying to get commands from command which doesn't has chained commands.
         $chainedCommands = $this
             ->object
-            ->getChainedCommands('command_without_chains')
-        ;
+            ->getChainedCommands('command_without_chains');
 
         $this->assertEquals([], $chainedCommands);
     }
@@ -119,13 +113,11 @@ class ChainCommandServiceTest extends \PHPUnit_Framework_TestCase
     {
         $this
             ->object
-            ->addChain('bar', 'foo')
-        ;
+            ->addChain('bar', 'foo');
 
         $this
             ->object
-            ->addChain('foo', 'bar')
-        ;
+            ->addChain('foo', 'bar');
     }
 
     /**
@@ -138,8 +130,7 @@ class ChainCommandServiceTest extends \PHPUnit_Framework_TestCase
     {
         $this
             ->object
-            ->addChain('bar', 'bar')
-        ;
+            ->addChain('bar', 'bar');
     }
 
     /**
@@ -152,35 +143,47 @@ class ChainCommandServiceTest extends \PHPUnit_Framework_TestCase
     {
         $this
             ->object
-            ->addChain('bar', 'foo')
-        ;
+            ->addChain('bar', 'foo');
 
         $this
             ->object
-            ->addChain('foo', 'tar')
-        ;
+            ->addChain('foo', 'tar');
 
         $this
             ->object
-            ->addChain('tar', 'bar')
-        ;
+            ->addChain('tar', 'bar');
     }
 
     public function testFindParentCommand()
     {
         $this
             ->object
-            ->addChain('bar', 'foo')
-        ;
+            ->addChain('bar', 'foo');
 
         $this
             ->object
-            ->addChain('bar', 'baz')
-        ;
+            ->addChain('bar', 'baz');
 
         $this->assertEquals('bar', $this->object->findParentCommand('foo'));
         $this->assertEquals('bar', $this->object->findParentCommand('baz'));
         $this->assertEquals(false, $this->object->findParentCommand('paz'));
         $this->assertEquals(false, $this->object->findParentCommand('bar'));
+    }
+
+    public function testMarkUnmarkBehaviours()
+    {
+        $this->assertFalse($this->object->isLaunchedInternally('bar'));
+
+        $this
+            ->object
+            ->markLaunchedCommand('bar');
+
+        $this->assertTrue($this->object->isLaunchedInternally('bar'));
+
+        $this
+            ->object
+            ->unmarkLaunchedCommand('bar');
+
+        $this->assertFalse($this->object->isLaunchedInternally('bar'));
     }
 }
