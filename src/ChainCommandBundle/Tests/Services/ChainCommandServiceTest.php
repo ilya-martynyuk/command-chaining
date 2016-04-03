@@ -6,8 +6,6 @@ use ChainCommandBundle\Services\ChainCommandService;
 use Monolog\Logger;
 
 /**
- * Class ChainCommandServiceTest
- *
  * Contains logic for testing of ChainCommandService.
  *
  * @package ChainCommandBundle\Tests\Unit\Services
@@ -71,26 +69,27 @@ class ChainCommandServiceTest extends \PHPUnit_Framework_TestCase
         // Receiving all attached to 'bar' commands.
         $chainedCommands = $this
             ->object
-            ->getChainedCommands('bar')
-        ;
+            ->getChainedCommands('bar');
 
-        $this->assertEquals([
+        $this->assertEquals('foo1', $chainedCommands[0]->getName());
+        $this->assertEquals([], $chainedCommands[0]->getArguments());
+
+        $this->assertEquals('foo2', $chainedCommands[1]->getName());
+        $this->assertEquals(
             [
-                'name' => 'foo1',
-                'arguments' => []
-            ], [
-                'name' => 'foo2',
-                'arguments' => [
-                    '--option' => 'option'
-                ]
-            ], [
-                'name' => 'foo2',
-                'arguments' => [
-                    '--option' => 'option',
-                    '--option2' => 'option2'
-                ]
-            ]
-        ], $chainedCommands);
+                '--option' => 'option'
+            ],
+            $chainedCommands[1]->getArguments()
+        );
+
+        $this->assertEquals('foo2', $chainedCommands[2]->getName());
+        $this->assertEquals(
+            [
+                '--option' => 'option',
+                '--option2' => 'option2'
+            ],
+            $chainedCommands[2]->getArguments()
+        );
     }
 
     public function testGetChainedCommands()
@@ -185,5 +184,27 @@ class ChainCommandServiceTest extends \PHPUnit_Framework_TestCase
             ->unmarkLaunchedCommand('bar');
 
         $this->assertFalse($this->object->isLaunchedInternally('bar'));
+    }
+
+    public function testIsBelongsToChain()
+    {
+        $this
+            ->object
+            ->addChain('bar', 'foo');
+
+        $this->assertTrue($this->object->isBelongsToChain('bar'));
+        $this->assertTrue($this->object->isBelongsToChain('foo'));
+        $this->assertFalse($this->object->isBelongsToChain('baz'));
+    }
+
+    public function testIsRootCommand()
+    {
+        $this
+            ->object
+            ->addChain('bar', 'foo');
+
+        $this->assertTrue($this->object->isRootCommand('bar'));
+        $this->assertFalse($this->object->isRootCommand('foo'));
+        $this->assertFalse($this->object->isRootCommand('baz'));
     }
 }

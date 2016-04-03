@@ -3,10 +3,11 @@
 namespace ChainCommandBundle\Services;
 
 use ChainCommandBundle\Exceptions\ChainCommandException;
+use ChainCommandBundle\Models\ChainedCommand;
 use Psr\Log\LoggerInterface;
 
 /**
- * This class is responsible for dealing with chained console commands.
+ * This class is responsible for dealing with chain of console commands.
  * It contains all registered chains, and has methods to dealing with them.
  *
  * @package ChainCommandBundle\Services
@@ -29,7 +30,7 @@ class ChainCommandService
 
     /**
      * Contains command which is launched internally.
-     * We will allowing executing this command from our pre execute listener.
+     * We will allowing executing this command from our AccessChecker.
      *
      * @var null
      */
@@ -63,23 +64,23 @@ class ChainCommandService
      *  b => a
      * ]
      *
-     * @param $parentCommand Root command name
-     * @param $childCommand Command name which should be chained to root command
-     * @throws ChainCommandException In case if those commands are recursively
+     * @param $parentCommand Root command name.
+     * @param $childCommand Command name which should be chained to root command.
+     * @throws ChainCommandException In case if those commands are recursively.
      */
     protected function checkForRecursivelyChaining($parentCommand, $childCommand)
     {
         $childChainedCommands = $this->getChainedCommands($childCommand);
 
         foreach($childChainedCommands as $command) {
-            if ($command['name'] === $parentCommand) {
+            if ($command->getName() === $parentCommand) {
                 throw new ChainCommandException(
                     "Command '$parentCommand' is already chained by '$childCommand'. Recursively chaining detected"
                 );
             }
 
             // Lets check all child commands recursively.
-            $this->checkForRecursivelyChaining($command['name'], $childCommand);
+            $this->checkForRecursivelyChaining($command->getName(), $childCommand);
         }
     }
 
@@ -90,7 +91,7 @@ class ChainCommandService
      * @param $childCommand Command name which is a member of root command.
      * @param array $arguments Member command arguments.
      * @return $this
-     * @throws ChainCommandException
+     * @throws ChainCommandException In case of attempting to create recursively chain.
      */
     public function addChain($parentCommand, $childCommand, array $arguments = [])
     {
@@ -102,22 +103,53 @@ class ChainCommandService
 
         if (!array_key_exists($parentCommand, $this->chainsRegistry)) {
             $this->chainsRegistry[$parentCommand] = [];
+            $this
+                ->logger
+                ->addInfo("$parentCommand is a master command of a command chain that has registered member commands");
         }
 
-        $chainSettings = [
-            'name' => $childCommand,
-            'arguments' => $arguments
-        ];
+        $chainedCommand = new ChainedCommand($childCommand);
+        $chainedCommand->setArguments($arguments);
 
         // Skipp this chaining in case if the same chain is already exist.
-        if (array_search($chainSettings, $this->chainsRegistry[$parentCommand])) {
+        if (array_search($chainedCommand, $this->chainsRegistry[$parentCommand])) {
             return $this;
         }
 
         $this->checkForRecursivelyChaining($parentCommand, $childCommand);
-        $this->chainsRegistry[$parentCommand][] = $chainSettings;
+        $this->chainsRegistry[$parentCommand][] = $chainedCommand;
+
+        $this
+            ->logger
+            ->addInfo("$childCommand registered as a member of $parentCommand command chain");
 
         return $this;
+    }
+
+    /**
+     * Checks whether command belongs to some chain (command is a member or root of chain).
+     *
+     * @param $commandName Command name to check.
+     * @return bool
+     */
+    public function isBelongsToChain($commandName)
+    {
+        if ($this->isRootCommand($commandName)) {
+            return true;
+        }
+
+        return !!$this->findParentCommand($commandName);
+    }
+
+    /**
+     * Checks whether command a root of chain.
+     *
+     * @param $commandName Command name to check.
+     * @return bool
+     */
+    public function isRootCommand($commandName)
+    {
+        return array_key_exists($commandName, $this->chainsRegistry);
     }
 
     /**
@@ -146,7 +178,7 @@ class ChainCommandService
     {
         foreach ($this->chainsRegistry as $rootCommandName => $members) {
             foreach ($members as $childCommand) {
-                if ($childCommand['name'] === $childCommandName) {
+                if ($childCommand->getName() === $childCommandName) {
                     return $rootCommandName;
                 }
             }
@@ -156,7 +188,7 @@ class ChainCommandService
     }
 
     /**
-     * Mark command as launched internally. This is mean that command launched from our event listener.
+     * Mark command as launched internally. This mean that command launched from our event listener, not manually.
      *
      * @param $commandName
      */
