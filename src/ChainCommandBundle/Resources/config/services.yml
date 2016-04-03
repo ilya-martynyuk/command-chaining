@@ -21,31 +21,17 @@ services:
     arguments: ['@chain_command.logger']
 
   # Used for buffering output of commands which belong to chain, so we will be able logging their output.
-  chain_command.buffering_output:
-    class: ChainCommandBundle\Listeners\BufferingOutputMaker
+  chain_command.pre_execute:
+    class: ChainCommandBundle\Listeners\PreExecuteCommand
     arguments: ['@chain_command.service', '@chain_command.logger']
     calls:
       - [setContainer, ["@service_container"]]
     tags:
-      - { name: kernel.event_listener, event: console.command, priority: 3 }
-
-  # Checks whether command can be executed. We don't allow execution of commands which are belongs to chain.
-  chain_command.access_checker:
-    class: ChainCommandBundle\Listeners\AccessChecker
-    arguments: ['@chain_command.service', '@chain_command.logger']
-    tags:
       - { name: kernel.event_listener, event: console.command, priority: 2 }
-
-  # Contains custom operations related to chain services
-  chain_command.command_pre_execute:
-    class: ChainCommandBundle\Listeners\PreExecuteCommand
-    arguments: ['@chain_command.service', '@chain_command.logger']
-    tags:
-      - { name: kernel.event_listener, event: console.command, priority: 0 }
 
   # Used for fetching of buffered and logging output after command was executed
   chain_command.command_terminate:
-    class: ChainCommandBundle\Listeners\TerminateCommandListener
+    class: ChainCommandBundle\Listeners\TerminateCommand
     arguments: ['@chain_command.service', '@chain_command.logger']
     calls:
       - [setContainer, ["@service_container"]]
