@@ -13,8 +13,9 @@ use Symfony\Component\DependencyInjection\ContainerAwareInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Used for dealing with chain commands.
- * Checks whether
+ * Catches all of execute events of chain commands .
+ * Checks whether command can be executed manually (command should not be a member of chain).
+ * Re executes commands with injecting of BfferedOutput (this allows us to logging of command output).
  *
  * @package ChainCommandBundle\Listeners
  */
@@ -131,6 +132,12 @@ class PreExecuteCommand implements ContainerAwareInterface
         return get_class($output) === 'Symfony\Component\Console\Output\BufferedOutput';
     }
 
+    /**
+     * Build and return ConsoleApplication.
+     *
+     * @param $kernel
+     * @return Application
+     */
     protected function buildApplication($kernel)
     {
         return new Application($kernel);
